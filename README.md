@@ -18,6 +18,15 @@ Each heartbeat includes:
 
 ## Usage
 
+TODO: add build scripts for Linux & Windows.
+
+1. Run `./build.sh`; it should automatically detect your platform & run a build script.
+
+The basic idea is to generate a release build & run the watcher with your platform's init service.
+
+
+## Development
+
 ```sh
 cargo run -- --testing
 ```
@@ -28,6 +37,7 @@ Flags:
 - `--port <port>` override ActivityWatch server port (default: 5600)
 - `--interval <seconds>` heartbeat interval (default: 60)
 - `--config <path>` YAML config for location matching
+
 
 ## Location config
 

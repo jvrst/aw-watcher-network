@@ -1,29 +1,26 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-LABEL="net.activitywatch.aw-watcher-network"
-DOMAIN="gui/$UID"
-PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-BIN_NAME="aw-watcher-network"
-BUILD_BIN="target/release/$BIN_NAME"
-LINK_BIN="/usr/local/bin/$BIN_NAME"
-
-echo "Building $BIN_NAME…"
-cargo build --release
-
-# Symlink binary if missing
-if [ ! -e "$LINK_BIN" ]; then
-  echo "Linking $BIN_NAME to /usr/local/bin (sudo required)…"
-  sudo ln -s "$(pwd)/$BUILD_BIN" "$LINK_BIN"
-else
-  echo "Binary already linked at $LINK_BIN"
-fi
-
-# Bootstrap only if not already loaded
-if ! launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1; then
-  echo "Bootstrapping launch agent…"
-  launchctl bootstrap "$DOMAIN" "$PLIST"
-fi
-
-echo "Restarting ActivityWatch Network Watcher…"
-launchctl kickstart -k "$DOMAIN/$LABEL"
+platform="$(uname -s)"
+case "$platform" in
+  Darwin)
+    exec "$(dirname "$0")/run/macos/build.sh"
+    ;;
+  Linux)
+    exec "$(dirname "$0")/run/linux/build.sh"
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    if command -v pwsh >/dev/null 2>&1; then
+      exec pwsh -File "$(dirname "$0")/run/windows/build.ps"
+    elif command -v powershell >/dev/null 2>&1; then
+      exec powershell -File "$(dirname "$0")/run/windows/build.ps"
+    else
+      echo "PowerShell is required to run run/windows/build.ps"
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Unsupported platform: $platform"
+    exit 1
+    ;;
+esac
