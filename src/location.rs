@@ -90,4 +90,37 @@ mod tests {
         let rules = LocationRules::from_config(config);
         assert_eq!(rules.resolve("10.1.2.3").as_deref(), Some("home"));
     }
+
+    #[test]
+    fn resolves_multiple_entries_ipv4() {
+        let config = ConfigFile {
+            locations: Some(serde_yaml::from_str(
+                "office:\n  - 192.0.2.10\n  - 192.0.2.20\n",
+            ).unwrap()),
+        };
+        let rules = LocationRules::from_config(config);
+        assert_eq!(
+            rules.resolve("192.0.2.10").as_deref(),
+            Some("office")
+        );
+        assert_eq!(
+            rules.resolve("192.0.2.20").as_deref(),
+            Some("office")
+        );
+    }
+
+    #[test]
+    fn resolves_ipv6_exact() {
+        let config = ConfigFile {
+            locations: Some(serde_yaml::from_str(
+                "office:\n  - 2001:db8::1\n",
+            ).unwrap()),
+        };
+        let rules = LocationRules::from_config(config);
+        assert_eq!(
+            rules.resolve("2001:db8::1").as_deref(),
+            Some("office")
+        );
+        assert_eq!(rules.resolve("2001:db8::2"), None);
+    }
 }
